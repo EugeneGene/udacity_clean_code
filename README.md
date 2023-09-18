@@ -1,4 +1,4 @@
-# Untested Template
+# Template
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Language-Python-blue.svg)](https://python.org/)
@@ -26,19 +26,12 @@ deploy/                    - K8s deployment files
 ├── postgresql.yaml        - PostgreSQL
 └── service.yaml           - Service
 
-docs/                      - Github Pages
+docs/                      - Github Pages (Example)
 ├── doc.txt                - 
 └── index.html             - AirBnB Data Analysis Blog
 
-notebooks/                                         - Jupyter Notebooks
-├── data                                           - Deployment
-    ├── large_data_100MB     - Directory for large Data 
-    └── small_data_100MB     - Directory for small data
-        ├── archive          - Seattle Airbnb data directory
-            ├── calendar.csv          
-            ├── listings.csv          
-            └── reviews.csv         
-└── seattle-airbnb-exploration_REBEdit.ipynb      - Example Notebook
+notebooks/                - Jupyter Notebooks
+└── data                                          
 
 service/                   - service python package
 ├── __init__.py            - package initializer
