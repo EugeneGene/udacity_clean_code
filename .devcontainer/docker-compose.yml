@@ -8,7 +8,7 @@ services:
       context: ..
       dockerfile: .devcontainer/Dockerfile    
     hostname: ibm
-    container_name: Clean Code
+    container_name: clean_code
     volumes:
       - ..:/app
       # - ~/.bluemix/apikey.json:/home/vscode/.bluemix/apikey.json
