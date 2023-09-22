@@ -1,10 +1,81 @@
-# library doc string
+"""
+This Python library provides a set of functions for performing binary classification on a dataset
+to predict churn. It includes data import, exploratory data analysis (EDA), feature engineering,
+model training and evaluation, as well as visualization functions.
 
+Dependencies:
+- os
+- shap
+- joblib
+- pandas
+- numpy
+- matplotlib
+- seaborn
+- sklearn
 
-# import libraries
+Functions:
+- `import_data(pth)`:
+    Loads a CSV file located at 'pth' into a pandas DataFrame.
+- `perform_eda(df)`:
+    Performs exploratory data analysis on the input DataFrame and saves figures
+    to an 'images' folder.
+- `encoder_helper(df, category_lst, response)`:
+    Converts categorical columns into new columns with the proportion of churn
+    for each category.
+- `perform_feature_engineering(df, response)`:
+    Prepares data for model training and returns training and testing datasets.
+- `classification_report_image(y_train, y_test, y_train_preds_lr,
+                               y_train_preds_rf, y_test_preds_lr,
+                               y_test_preds_rf)`:
+    Produces classification reports for training and testing results
+    and stores them as images.
+- `feature_importance_plot(model, X_data, output_pth)`:
+    Creates and stores feature importance plots.
+- `train_models(X_train, X_test, y_train, y_test)`:
+    Trains classification models, stores model results (images and scores),
+    and stores the trained models.
+
+Usage:
+To use this library, import it in your Python script and call the provided functions as needed.
+
+For example:
+```python
+import churn_library as cls
+
+# Load data
+data = cls.import_data("./data/bank_data.csv")
+
+# Perform EDA
+cls.perform_eda(data)
+
+# Encode categorical features
+encoded_data = cls.encoder_helper(data, category_lst=['category1', 'category2'], response='churn')
+
+# Prepare data for modeling
+X_train, X_test, y_train, y_test = cls.perform_feature_engineering(encoded_data, response='churn')
+
+# Train models and store results
+cls.train_models(X_train, X_test, y_train, y_test)
+
+Please make sure to provide the necessary data and adjust the function parameters as needed.
+"""
 import os
 os.environ['QT_QPA_PLATFORM']='offscreen'
 
+import shap
+import joblib
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns; sns.set()
+
+from sklearn.preprocessing import normalize
+from sklearn.model_selection import train_test_split
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import plot_roc_curve, classification_report
 
 
 def import_data(pth):
@@ -15,8 +86,9 @@ def import_data(pth):
             pth: a path to the csv
     output:
             df: pandas dataframe
-    '''	
-    pass
+    '''
+    df = pd.read_csv(pth)
+    return df
 
 
 def perform_eda(df):
@@ -39,7 +111,8 @@ def encoder_helper(df, category_lst, response):
     input:
             df: pandas dataframe
             category_lst: list of columns that contain categorical features
-            response: string of response name [optional argument that could be used for naming variables or index y column]
+            response: string of response name [optional argument that
+                      could be used for naming variables or index y column]
 
     output:
             df: pandas dataframe with new columns for
@@ -51,7 +124,8 @@ def perform_feature_engineering(df, response):
     '''
     input:
               df: pandas dataframe
-              response: string of response name [optional argument that could be used for naming variables or index y column]
+              response: string of response name
+              [optional argument that could be used for naming variables or index y column]
 
     output:
               X_train: X training data
