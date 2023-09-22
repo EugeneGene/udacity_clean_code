@@ -91,17 +91,74 @@ def import_data(pth):
     return df
 
 
-def perform_eda(df):
+def perform_eda(df, pth="./images/eda/"):
     '''
     perform eda on df and save figures to images folder
     input:
             df: pandas dataframe
+            pth: path for saving EDA files
 
     output:
             None
     '''
-    pass
+    cat_columns = [
+    'Gender',
+    'Education_Level',
+    'Marital_Status',
+    'Income_Category',
+    'Card_Category'                
+    ]
 
+    quant_columns = [
+        'Customer_Age',
+        'Dependent_count', 
+        'Months_on_book',
+        'Total_Relationship_Count', 
+        'Months_Inactive_12_mon',
+        'Contacts_Count_12_mon', 
+        'Credit_Limit', 
+        'Total_Revolving_Bal',
+        'Avg_Open_To_Buy', 
+        'Total_Amt_Chng_Q4_Q1', 
+        'Total_Trans_Amt',
+        'Total_Trans_Ct', 
+        'Total_Ct_Chng_Q4_Q1', 
+        'Avg_Utilization_Ratio'
+    ]
+    df['Churn'] =\
+        df['Attrition_Flag'].apply(lambda val: 0 if val == "Existing Customer" else 1)
+
+    plt.figure(figsize=(20,10)) 
+    df['Churn'].hist();
+    image_path = pth + "churn_histogram.png" # "./images/eda/churn_histogram.png"
+    plt.savefig(image_path)
+    plt.close()
+
+    plt.figure(figsize=(20,10)) 
+    df['Customer_Age'].hist();
+    image_path = pth + "customer_age_histogram.png"
+    plt.savefig(image_path)
+    plt.close()
+
+    plt.figure(figsize=(20,10)) 
+    df.Marital_Status.value_counts('normalize').plot(kind='bar');
+    image_path = pth + "marital_status_value_counts_bar.png"
+    plt.savefig(image_path)
+    plt.close()
+
+    plt.figure(figsize=(20,10))
+    sns.histplot(df['Total_Trans_Ct'], stat='density', kde=True);
+    image_path = pth + "total_trans_ct_histplot.png"
+    plt.savefig(image_path)
+    plt.close()
+
+    plt.figure(figsize=(20,10)) 
+    sns.heatmap(df.corr(), annot=False, cmap='Dark2_r', linewidths = 2)
+    plt.show()
+    image_path = pth + "feature_corr_heatmap.png"
+    plt.savefig(image_path)
+    plt.close()
+    
 
 def encoder_helper(df, category_lst, response):
     '''
@@ -117,7 +174,16 @@ def encoder_helper(df, category_lst, response):
     output:
             df: pandas dataframe with new columns for
     '''
-    pass
+    for category in category_lst:
+        category_lst = []
+        category_groups = df.groupby(category).mean()[response]
+
+        for val in df[category]:
+            category_lst.append(category_groups.loc[val])
+
+        df[f'{category}_{response}'] = category_lst
+
+    return df
 
 
 def perform_feature_engineering(df, response):
@@ -133,6 +199,29 @@ def perform_feature_engineering(df, response):
               y_train: y training data
               y_test: y testing data
     '''
+
+    category_lst = ['Gender', 'Education_Level', 'Marital_Status',
+                    'Income_Category', 'Card_Category']
+    response = 'Churn'
+
+    post_encoding_df = encoder_helper(df, category_lst, response)
+
+    keep_cols = ['Customer_Age', 'Dependent_count', 'Months_on_book',
+             'Total_Relationship_Count', 'Months_Inactive_12_mon',
+             'Contacts_Count_12_mon', 'Credit_Limit', 'Total_Revolving_Bal',
+             'Avg_Open_To_Buy', 'Total_Amt_Chng_Q4_Q1', 'Total_Trans_Amt',
+             'Total_Trans_Ct', 'Total_Ct_Chng_Q4_Q1', 'Avg_Utilization_Ratio',
+             'Gender_Churn', 'Education_Level_Churn', 'Marital_Status_Churn', 
+             'Income_Category_Churn', 'Card_Category_Churn']
+
+    X[keep_cols] = post_encoding_df[keep_cols]
+    y = df['Churn']
+    
+    X_train, X_test, y_train, y_test =\
+        train_test_split(X, y, test_size= 0.3, random_state=42)
+
+    return X_train, X_test, y_train, y_test
+
 
 def classification_report_image(y_train,
                                 y_test,
@@ -182,3 +271,8 @@ def train_models(X_train, X_test, y_train, y_test):
               None
     '''
     pass
+
+if __name__ == "__main__":
+    df = import_data("./data/bank_data.csv")
+    perform_eda(df)
+
