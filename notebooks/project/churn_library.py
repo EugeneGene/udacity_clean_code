@@ -130,7 +130,7 @@ def perform_eda(df, pth="./images/eda/"):
 
     plt.figure(figsize=(20,10)) 
     df['Churn'].hist();
-    image_path = pth + "churn_histogram.png" # "./images/eda/churn_histogram.png"
+    image_path = pth + "churn_histogram.png" 
     plt.savefig(image_path)
     plt.close()
 
@@ -214,8 +214,9 @@ def perform_feature_engineering(df, response):
              'Gender_Churn', 'Education_Level_Churn', 'Marital_Status_Churn', 
              'Income_Category_Churn', 'Card_Category_Churn']
 
+    X = pd.DataFrame()
     X[keep_cols] = post_encoding_df[keep_cols]
-    y = df['Churn']
+    y = post_encoding_df['Churn']
     
     X_train, X_test, y_train, y_test =\
         train_test_split(X, y, test_size= 0.3, random_state=42)
@@ -259,7 +260,9 @@ def feature_importance_plot(model, X_data, output_pth):
     '''
     pass
 
-def train_models(X_train, X_test, y_train, y_test):
+def train_models(X_train, X_test, y_train, y_test, 
+                 pth_results="./image/results/", 
+                 pth_models="./models/"):
     '''
     train, store model results: images + scores, and store models
     input:
@@ -270,7 +273,60 @@ def train_models(X_train, X_test, y_train, y_test):
     output:
               None
     '''
-    pass
+
+    # Random Forest Classifier Model with GridSearch optimization
+    rfc = RandomForestClassifier(random_state=42)
+    param_grid = { 
+        'n_estimators': [200, 500],
+        'max_features': ['auto', 'sqrt'],
+        'max_depth': [4, 5, 100],
+        'criterion': ['gini', 'entropy']
+    }
+    cv_rfc = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=5)
+    cv_rfc.fit(X_train, y_train)
+ 
+    y_train_preds_rf = cv_rfc.best_estimator_.predict(X_train)
+    y_test_preds_rf = cv_rfc.best_estimator_.predict(X_test)
+
+    # Calculate classification reports for random forest
+    rf_test_report = classification_report(y_test, y_test_preds_rf, output_dict=True)
+    rf_train_report = classification_report(y_train, y_train_preds_rf, output_dict=True)
+    
+    # Convert the classification reports to DataFrames
+    rf_test_report_df = pd.DataFrame(rf_test_report).transpose()
+    rf_train_report_df = pd.DataFrame(rf_train_report).transpose()
+    
+    # Save the DataFrames to CSV files
+    rf_test_report_df.to_csv(pth_results + "random_forest_test_report.csv")
+    rf_train_report_df.to_csv(pth_results + "random_forest_train_report.csv")
+    
+    # Save the best random forest model
+    joblib.dump(cv_rfc.best_estimator_, pth_models + "random_forest_model.pkl")
+
+    
+    # Logistic Regression Classifier
+    lrc = LogisticRegression(solver='lbfgs', max_iter=3000)
+    lrc.fit(X_train, y_train)
+
+    y_train_preds_lr = lrc.predict(X_train)
+    y_test_preds_lr = lrc.predict(X_test)
+
+    # Calculate classification reports for logistic regression
+    lr_test_report = classification_report(y_test, y_test_preds_lr, output_dict=True)
+    lr_train_report = classification_report(y_train, y_train_preds_lr, output_dict=True)
+    
+    # Convert the classification reports to DataFrames
+    lr_test_report_df = pd.DataFrame(lr_test_report).transpose()
+    lr_train_report_df = pd.DataFrame(lr_train_report).transpose()
+    
+    # Save the DataFrames to CSV files
+    lr_test_report_df.to_csv(pth_results + "logistic_model_test_report.csv")
+    lr_train_report_df.to_csv(pth_results + "logistic_model_train_report.csv")
+
+    # Save the best logistic regression model
+    joblib.dump(lrc, pth_models + "logistic_model.pkl")
+
+    
 
 if __name__ == "__main__":
     df = import_data("./data/bank_data.csv")

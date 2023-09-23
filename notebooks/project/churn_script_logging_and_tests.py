@@ -116,7 +116,8 @@ def test_encoder_helper(encoder_helper):
 
     test_data_df = cls.import_data("./data_test/bank_data_test.csv")
     test_data_df['Churn'] =\
-    test_data_df['Attrition_Flag'].apply(lambda val: 0 if val == "Existing Customer" else 1)
+    test_data_df['Attrition_Flag']\
+        .apply(lambda val: 0 if val == "Existing Customer" else 1)
 
     category_lst = ['Gender', 'Education_Level', 'Marital_Status',
                     'Income_Category', 'Card_Category']
@@ -144,13 +145,105 @@ def test_perform_feature_engineering(perform_feature_engineering):
     '''
     test perform_feature_engineering
     '''
+    test_data_df = cls.import_data("./data_test/bank_data_test.csv")
+    test_data_df['Churn'] =\
+    test_data_df['Attrition_Flag']\
+        .apply(lambda val: 0 if val == "Existing Customer" else 1)
+
+    category_lst = ['Gender', 'Education_Level', 'Marital_Status',
+                    'Income_Category', 'Card_Category']
+    response = 'Churn'
+    
+    post_encoding_test_data_df = cls.encoder_helper(test_data_df, category_lst, response)
+
+    X_train, X_test, y_train, y_test =\
+        perform_feature_engineering(post_encoding_test_data_df, response)
+
+    # Test for existence of training and testing set
+    try:
+        assert len(X_train) > 0
+        logging.info(f"SUCCESS: X_train has a lenght of {len(X_train)}.")
+
+    except AssertionError as e:
+        logging.error(f"Error: {e}")
+
+    try:
+        assert len(X_test) > 0
+        logging.info(f"SUCCESS: X_test has a lenght of {len(X_test)}.")
+
+    except AssertionError as e:
+        logging.error(f"Error: {e}")
+
+    try:
+        assert len(y_train) > 0
+        logging.info(f"SUCCESS: y_train has a lenght of {len(y_train)}.")
+
+    except AssertionError as e:
+        logging.error(f"Error: {e}")
+
+    try:
+        assert len(y_test) > 0
+        logging.info(f"SUCCESS: y_train has a lenght of {len(y_test)}.")
+
+    except AssertionError as e:
+        logging.error(f"Error: {e}")
+
 
 def test_train_models(train_models):
     '''
     test train_models
     '''
+    test_data_df = cls.import_data("./data_test/bank_data_test.csv")
+    test_data_df['Churn'] =\
+    test_data_df['Attrition_Flag']\
+        .apply(lambda val: 0 if val == "Existing Customer" else 1)
+
+    category_lst = ['Gender', 'Education_Level', 'Marital_Status',
+                    'Income_Category', 'Card_Category']
+    response = 'Churn'
+    
+    post_encoding_test_data_df = cls.encoder_helper(test_data_df, category_lst, response)
+
+    X_train, X_test, y_train, y_test =\
+        cls.perform_feature_engineering(post_encoding_test_data_df, response)
+
+
+
+    
+    
+    # Test
+
+    # Specify a test directory for images (you may need to adjust this path)
+    test_results_directory = "./images_test/results/"
+    test_models_directory = "./models_test/"
+
+    # Create the directories if they don't exist
+    for dir in [test_results_directory, test_models_directory]:
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+
+    train_models(X_train, X_test, y_train, y_test, 
+                 test_results_directory, 
+                 test_models_directory)
+
+    
+
+    
+    # finally:
+    #     # Clean up: remove generated test results and models
+    #     for dir in [test_results_directory, test_models_directory]:
+    #         for file in os.listdir(dir):
+    #             file_path = os.path.join(dir, file)
+    #             os.remove(file_path)
+    #             logging.info(f"SUCCESS: {file_path} removed")
+    #         os.rmdir(dir)
+    #         logging.info(f"SUCCESS: {dir} removed")
+
+
 
 if __name__ == "__main__":
     test_import(cls.import_data)
     test_eda(cls.perform_eda)
     test_encoder_helper(cls.encoder_helper)
+    test_perform_feature_engineering(cls.perform_feature_engineering)
+    test_train_models(cls.train_models)
