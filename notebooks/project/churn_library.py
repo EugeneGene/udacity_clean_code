@@ -304,6 +304,13 @@ def train_models(X_train, X_test, y_train, y_test,
     joblib.dump(cv_rfc.best_estimator_, pth_models + "random_forest_model.pkl")
 
     
+    
+
+    
+    
+
+
+    
     # Logistic Regression Classifier
     lrc = LogisticRegression(solver='lbfgs', max_iter=3000)
     lrc.fit(X_train, y_train)
@@ -325,6 +332,26 @@ def train_models(X_train, X_test, y_train, y_test,
 
     # Save the best logistic regression model
     joblib.dump(lrc, pth_models + "logistic_model.pkl")
+
+
+    #Compare ROC between the two models
+    lrc_plot = plot_roc_curve(lrc, X_test, y_test)
+    plt.figure(figsize=(15, 8))
+    ax = plt.gca()
+    rfc_disp = plot_roc_curve(cv_rfc.best_estimator_, X_test, y_test, ax=ax, alpha=0.8)
+    lrc_plot.plot(ax=ax, alpha=0.8)
+    image_path = pth_results + "random_forest_and_logistic_regress_test_ROC_plots.png" 
+    plt.savefig(image_path)
+    plt.close()
+
+    lrc_plot = plot_roc_curve(lrc, X_train, y_train)
+    plt.figure(figsize=(15, 8))
+    ax = plt.gca()
+    rfc_disp = plot_roc_curve(cv_rfc.best_estimator_, X_train, y_train, ax=ax, alpha=0.8)
+    lrc_plot.plot(ax=ax, alpha=0.8)
+    image_path = pth_results + "random_forest_and_logistic_regress_train_ROC_plots.png" 
+    plt.savefig(image_path)
+    plt.close()
 
     
 

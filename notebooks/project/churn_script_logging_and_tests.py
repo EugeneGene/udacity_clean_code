@@ -95,7 +95,7 @@ def test_eda(perform_eda):
         logging.info(f"SUCCESS: {len(files)} EDA File Created.")
         
     except:
-        logging.error("Error: EDA file(s) weren't created")
+        logging.error("ERROR: EDA file(s) weren't created")
         
     # Comment finally to see test plots
     finally:
@@ -226,7 +226,42 @@ def test_train_models(train_models):
                  test_results_directory, 
                  test_models_directory)
 
-    
+
+    try:
+
+        # Get a list of all files and directories in the specified directory
+        files_and_directories = os.listdir(test_models_directory)
+        # Use a list comprehension to filter only files (not directories)
+        files = [file for file in files_and_directories if 
+                 os.path.isfile(os.path.join(test_models_directory, file))]
+        # files = [file for file in os.listdir(test_results_directory) 
+        #          if file.endswith(".csv")]
+
+        # Check if the images were generated in the test directory
+        assert len(files) > 0
+        logging.info(f"SUCCESS: {len(files)} model files (pkl) Created.")
+        
+    except:
+        logging.error("Error: No model files were created")
+
+
+    try:
+
+        # Get a list of all files and directories in the specified directory
+        files_and_directories = os.listdir(test_results_directory)
+        # Use a list comprehension to filter only files (not directories)
+        files = [file for file in files_and_directories if 
+                 os.path.isfile(os.path.join(test_results_directory, file))]
+        # files = [file for file in os.listdir(test_results_directory) 
+        #          if file.endswith(".csv")]
+
+        # Check if the images were generated in the test directory
+        assert len(files) > 0
+        logging.info(f"SUCCESS: {len(files)} classification report files (csv) Created.")
+        
+    except:
+        logging.error("Error: No classification reports were created")
+
 
     
     # finally:
