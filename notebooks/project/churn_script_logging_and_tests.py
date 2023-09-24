@@ -27,258 +27,228 @@ Test Functions:
 """
 import os, shutil
 import logging
-import churn_library as cls
+import unittest
 import pandas as pd
+import churn_library as cls
 
-logging.basicConfig(
-    filename='./logs/churn_library.log',
-    level = logging.INFO,
-    filemode='w',
-    format='%(name)s - %(levelname)s - %(message)s')
 
-def test_import(import_data):
-    '''
-    test data import - this example is completed for you to assist with the other test functions
-    '''
-    try:
-        df = import_data("./data/bank_data.csv")
-        logging.info("SUCCESS: Testing import_data")
-    except FileNotFoundError as err:
-        logging.error("ERROR: Testing import_eda: The file wasn't found")
-        raise err
-        
-    try:
-        assert df.shape[0] > 0
-        assert df.shape[1] > 0
-    except AssertionError as err:
-        logging.error("Testing import_data: The file doesn't appear to have rows and columns")
-        raise err
 
-def test_eda(perform_eda):
-    '''
-    test perform eda function
-    '''
+class TestChurnScript(unittest.TestCase):
+    logging.basicConfig(
+        filename='./logs/churn_library.log',
+        level = logging.INFO,
+        filemode='w',
+        format='%(name)s - %(levelname)s - %(message)s')
 
-    # Create a sample DataFrame for testing
-    sample_data = {
-        'index': [1, 2, 3, 4, 5, 6],
-        'Attrition_Flag': ["Existing Customer", "Existing Customer",
-                           "Attrited Customer", "Attrited Customer", 
-                           "Existing Customer", "Existing Customer"],
-        'Customer_Age': [67, 35, 20, 18, 66, 68],
-        'Marital_Status': ["Unknown", "Divorced",
-                          "Divorced", "Married", 
-                          "Divorced", "Divorced"],
-        'Total_Trans_Ct': [42, 33, 20, 20, 28, 24]
-    }
-    sample_data_df = pd.DataFrame(sample_data)
-
-    # Specify a test directory for images (you may need to adjust this path)
-    test_images_directory = "./images_test/eda/"
-
-    # Create the test directory if it doesn't exist
-    if not os.path.exists(test_images_directory):
-        os.makedirs(test_images_directory)
-
-    try:
-        # Call perform_eda on the sample DataFrame
-        perform_eda(sample_data_df, test_images_directory)
-
-        # Get a list of all files and directories in the specified directory
-        files_and_directories = os.listdir(test_images_directory)
-        # Use a list comprehension to filter only files (not directories)
-        files = [file for file in files_and_directories if 
-                 os.path.isfile(os.path.join(test_images_directory, file))]
-
-        # Check if the images were generated in the test directory
-        assert len(files) > 0
-        logging.info(f"SUCCESS: {len(files)} EDA File Created.")
-        
-    except:
-        logging.error("ERROR: EDA file(s) weren't created")
-        
-    # Comment finally to see test plots
-    finally:
-        # Clean up: remove generated images and the test directory
-        for file in os.listdir(test_images_directory):
-            file_path = os.path.join(test_images_directory, file)
-            os.remove(file_path)
-            logging.info(f"SUCCESS: {file_path} removed")
-        shutil.rmtree(test_images_directory)
-        logging.info(f"SUCCESS: {test_images_directory} removed")
-
-    
-
-def test_encoder_helper(encoder_helper):
-    '''
-    test encoder helper
-    '''
-
-    test_data_df = cls.import_data("./data_test/bank_data_test.csv")
-    test_data_df['Churn'] =\
-    test_data_df['Attrition_Flag']\
-        .apply(lambda val: 0 if val == "Existing Customer" else 1)
-
-    category_lst = ['Gender', 'Education_Level', 'Marital_Status',
-                    'Income_Category', 'Card_Category']
-    response = 'Churn'
-
-    
-    post_encoding_df = encoder_helper(test_data_df, category_lst, response)
-
-    # Define the value you want to check for
-    new_cols_to_check = ['Gender_Churn', 'Education_Level_Churn', 'Marital_Status_Churn',
-    'Income_Category_Churn', 'Card_Category_Churn']
-
-    
-    for new_col_to_check in new_cols_to_check:
-        # Test for the existence of the name in the 'Name' column
+    def test_import(self):
+        '''
+        test data import - this example is completed for you to assist with the other test functions
+        '''
         try:
-            assert new_col_to_check in post_encoding_df.columns
-            logging.info(f"SUCCESS: {new_col_to_check} encoding completed.")
-    
-        except AssertionError as e:
-            logging.error(f"Error: {e}")
-            
+            df = cls.import_data("./data/bank_data.csv")
+            logging.info("SUCCESS: Testing import_data")
+        except FileNotFoundError as err:
+            logging.error("ERROR: Testing import_eda: The file wasn't found")
+            raise err
 
-def test_perform_feature_engineering(perform_feature_engineering):
-    '''
-    test perform_feature_engineering
-    '''
-    test_data_df = cls.import_data("./data_test/bank_data_test.csv")
-    test_data_df['Churn'] =\
-    test_data_df['Attrition_Flag']\
-        .apply(lambda val: 0 if val == "Existing Customer" else 1)
+        try:
+            assert df.shape[0] > 0
+            assert df.shape[1] > 0
+        except AssertionError as err:
+            logging.error("Testing import_data: The file doesn't appear to have rows and columns")
+            raise err
 
-    category_lst = ['Gender', 'Education_Level', 'Marital_Status',
-                    'Income_Category', 'Card_Category']
-    response = 'Churn'
-    
-    post_encoding_test_data_df = cls.encoder_helper(test_data_df, category_lst, response)
+    def test_eda(self):
+        '''
+        test perform eda function
+        '''
 
-    X_train, X_test, y_train, y_test =\
-        perform_feature_engineering(post_encoding_test_data_df, response)
+        # Create a sample DataFrame for testing
+        sample_data = {
+            'index': [1, 2, 3, 4, 5, 6],
+            'Attrition_Flag': ["Existing Customer", "Existing Customer",
+                               "Attrited Customer", "Attrited Customer",
+                               "Existing Customer", "Existing Customer"],
+            'Customer_Age': [67, 35, 20, 18, 66, 68],
+            'Marital_Status': ["Unknown", "Divorced",
+                              "Divorced", "Married",
+                              "Divorced", "Divorced"],
+            'Total_Trans_Ct': [42, 33, 20, 20, 28, 24]
+        }
+        sample_data_df = pd.DataFrame(sample_data)
 
-    # Test for existence of training and testing set
-    try:
-        assert len(X_train) > 0
-        logging.info(f"SUCCESS: X_train has a lenght of {len(X_train)}.")
+        # Specify a test directory for images (you may need to adjust this path)
+        test_images_directory = "./images_test/eda/"
 
-    except AssertionError as e:
-        logging.error(f"Error: {e}")
+        # Create the test directory if it doesn't exist
+        if not os.path.exists(test_images_directory):
+            os.makedirs(test_images_directory)
 
-    try:
-        assert len(X_test) > 0
-        logging.info(f"SUCCESS: X_test has a lenght of {len(X_test)}.")
+        try:
+            # Call perform_eda on the sample DataFrame
+            cls.perform_eda(sample_data_df, test_images_directory)
 
-    except AssertionError as e:
-        logging.error(f"Error: {e}")
+            # Get a list of all files and directories in the specified directory
+            files_and_directories = os.listdir(test_images_directory)
+            # Use a list comprehension to filter only files (not directories)
+            files = [file for file in files_and_directories if
+                     os.path.isfile(os.path.join(test_images_directory, file))]
 
-    try:
-        assert len(y_train) > 0
-        logging.info(f"SUCCESS: y_train has a lenght of {len(y_train)}.")
+            # Check if the images were generated in the test directory
+            assert len(files) > 0
+            logging.info(f"SUCCESS: {len(files)} EDA File Created.")
+ 
+        except AssertionError:
+            logging.error("ERROR: EDA file(s) weren't created")
 
-    except AssertionError as e:
-        logging.error(f"Error: {e}")
+        # Comment out the finally block to inspect test plots during testing
+        finally:
+            # Clean up: remove generated images and the test directory
+            for file in os.listdir(test_images_directory):
+                file_path = os.path.join(test_images_directory, file)
+                os.remove(file_path)
+                logging.info(f"SUCCESS: {file_path} removed")
+            shutil.rmtree(test_images_directory)
+            logging.info(f"SUCCESS: {test_images_directory} removed")
 
-    try:
-        assert len(y_test) > 0
-        logging.info(f"SUCCESS: y_train has a lenght of {len(y_test)}.")
+    def test_encoder_helper(self):
+        '''
+        test encoder helper
+        '''
 
-    except AssertionError as e:
-        logging.error(f"Error: {e}")
+        test_data_df = cls.import_data("./data_test/bank_data_test.csv")
+        test_data_df['Churn'] =\
+        test_data_df['Attrition_Flag']\
+            .apply(lambda val: 0 if val == "Existing Customer" else 1)
 
+        category_lst = ['Gender', 'Education_Level', 'Marital_Status',
+                        'Income_Category', 'Card_Category']
+        response = 'Churn'
 
-def test_train_models(train_models):
-    '''
-    test train_models
-    '''
-    test_data_df = cls.import_data("./data_test/bank_data_test.csv")
-    test_data_df['Churn'] =\
-    test_data_df['Attrition_Flag']\
-        .apply(lambda val: 0 if val == "Existing Customer" else 1)
+        post_encoding_df = cls.encoder_helper(test_data_df, category_lst, response)
 
-    category_lst = ['Gender', 'Education_Level', 'Marital_Status',
-                    'Income_Category', 'Card_Category']
-    response = 'Churn'
-    
-    post_encoding_test_data_df = cls.encoder_helper(test_data_df, category_lst, response)
+        # Define the value you want to check for
+        new_cols_to_check = ['Gender_Churn', 'Education_Level_Churn', 'Marital_Status_Churn',
+        'Income_Category_Churn', 'Card_Category_Churn']
 
-    X_train, X_test, y_train, y_test =\
-        cls.perform_feature_engineering(post_encoding_test_data_df, response)
+        for new_col_to_check in new_cols_to_check:
+            # Test for the existence of the name in the 'Name' column
+            try:
+                assert new_col_to_check in post_encoding_df.columns
+                logging.info(f"SUCCESS: {new_col_to_check} encoding completed.")
 
+            except AssertionError as e:
+                logging.error(f"Error: {e}")
 
+    def test_perform_feature_engineering(self):
+        '''
+        test perform_feature_engineering
+        '''
+        test_data_df = cls.import_data("./data_test/bank_data_test.csv")
 
-    
-    
-    # Test
+        category_lst = ['Gender', 'Education_Level', 'Marital_Status',
+                        'Income_Category', 'Card_Category']
+        response = 'Churn'
 
-    # Specify a test directory for images (you may need to adjust this path)
-    test_results_directory = "./images_test/results/"
-    test_models_directory = "./models_test/"
+        post_encoding_test_data_df = cls.encoder_helper(test_data_df, category_lst, response)
 
-    # Create the directories if they don't exist
-    for dir in [test_results_directory, test_models_directory]:
-        if not os.path.exists(dir):
-            os.makedirs(dir)
+        X_train, X_test, y_train, y_test =\
+            cls.perform_feature_engineering(post_encoding_test_data_df, response)
 
-    train_models(X_train, X_test, y_train, y_test, 
-                 test_results_directory, 
-                 test_models_directory)
+        # Test for existence of training and testing set
+        try:
+            assert len(X_train) > 0
+            logging.info(f"SUCCESS: X_train has a lenght of {len(X_train)}.")
 
+        except AssertionError as err:
+            logging.error(f"Error: {err}")
 
-    try:
+        try:
+            assert len(X_test) > 0
+            logging.info(f"SUCCESS: X_test has a lenght of {len(X_test)}.")
 
-        # Get a list of all files and directories in the specified directory
-        files_and_directories = os.listdir(test_models_directory)
-        # Use a list comprehension to filter only files (not directories)
-        files = [file for file in files_and_directories if 
-                 os.path.isfile(os.path.join(test_models_directory, file))]
-        # files = [file for file in os.listdir(test_results_directory) 
-        #          if file.endswith(".csv")]
+        except AssertionError as err:
+            logging.error(f"Error: {err}")
 
-        # Check if the images were generated in the test directory
-        assert len(files) > 0
-        logging.info(f"SUCCESS: {len(files)} model files (pkl) Created.")
+        try:
+            assert len(y_train) > 0
+            logging.info(f"SUCCESS: y_train has a lenght of {len(y_train)}.")
+
+        except AssertionError as err:
+            logging.error(f"Error: {err}")
+
+        try:
+            assert len(y_test) > 0
+            logging.info(f"SUCCESS: y_train has a lenght of {len(y_test)}.")
+
+        except AssertionError as err:
+            logging.error(f"Error: {err}")
+
+    def test_train_models(self):
+        '''
+        test train_models
+        '''
+        test_data_df = cls.import_data("./data_test/bank_data_test.csv")
+        test_data_df['Churn'] =\
+        test_data_df['Attrition_Flag']\
+            .apply(lambda val: 0 if val == "Existing Customer" else 1)
+
+        category_lst = ['Gender', 'Education_Level', 'Marital_Status',
+                        'Income_Category', 'Card_Category']
+        response = 'Churn'
         
-    except:
-        logging.error("Error: No model files were created")
-
-
-    try:
-
-        # Get a list of all files and directories in the specified directory
-        files_and_directories = os.listdir(test_results_directory)
-        # Use a list comprehension to filter only files (not directories)
-        files = [file for file in files_and_directories if 
-                 os.path.isfile(os.path.join(test_results_directory, file))]
-        # files = [file for file in os.listdir(test_results_directory) 
-        #          if file.endswith(".csv")]
-
-        # Check if the images were generated in the test directory
-        assert len(files) > 0
-        logging.info(f"SUCCESS: {len(files)} classification report files (csv) Created.")
-        
-    except:
-        logging.error("Error: No classification reports were created")
-
-
+        post_encoding_test_data_df = cls.encoder_helper(test_data_df, category_lst, response)
     
-    # finally:
-    #     # Clean up: remove generated test results and models
-    #     for dir in [test_results_directory, test_models_directory]:
-    #         for file in os.listdir(dir):
-    #             file_path = os.path.join(dir, file)
-    #             os.remove(file_path)
-    #             logging.info(f"SUCCESS: {file_path} removed")
-    #         os.rmdir(dir)
-    #         logging.info(f"SUCCESS: {dir} removed")
+        X_train, X_test, y_train, y_test =\
+            cls.perform_feature_engineering(post_encoding_test_data_df, response)
+
+        # Test
+    
+        # Specify a test directory for images (you may need to adjust this path)
+        test_results_directory = "./images_test/results/"
+        test_models_directory = "./models_test/"
+    
+        # Create the directories if they don't exist
+        for directory in [test_results_directory, test_models_directory]:
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+
+        cls.train_models(X_train, X_test, y_train, y_test, 
+                     test_results_directory, 
+                     test_models_directory)
+
+        try:
+            # Get a list of all files and directories in the specified directory
+            files_and_directories = os.listdir(test_models_directory)
+            # Use a list comprehension to filter only files (not directories)
+            files = [file for file in files_and_directories if 
+                     os.path.isfile(os.path.join(test_models_directory, file))]
+            # files = [file for file in os.listdir(test_results_directory) 
+            #          if file.endswith(".csv")]
+    
+            # Check if the images were generated in the test directory
+            assert len(files) > 0
+            logging.info("SUCCESS: %d model files (pkl) Created.", len(files))
+
+        except AssertionError:
+            logging.error("Error: No model files were created")
 
 
+        # finally:
+        #     # Clean up: remove generated test results and models
+        #     for dir in [test_results_directory, test_models_directory]:
+        #         for file in os.listdir(dir):
+        #             file_path = os.path.join(dir, file)
+        #             os.remove(file_path)
+        #             logging.info(f"SUCCESS: {file_path} removed")
+        #         os.rmdir(dir)
+        #         logging.info(f"SUCCESS: {dir} removed")
 
 if __name__ == "__main__":
-    test_import(cls.import_data)
-    test_eda(cls.perform_eda)
-    test_encoder_helper(cls.encoder_helper)
-    test_perform_feature_engineering(cls.perform_feature_engineering)
-    test_train_models(cls.train_models)
+    unittest.main()
+
+    # TestChurnScript.test_import(cls.import_data)
+    # test_eda(cls.perform_eda)
+    # test_encoder_helper(cls.encoder_helper)
+    # test_perform_feature_engineering(cls.perform_feature_engineering)
+    # test_train_models(cls.train_models)

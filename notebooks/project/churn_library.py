@@ -81,6 +81,8 @@ from sklearn.metrics import plot_roc_curve, classification_report
 def import_data(pth):
     '''
     returns dataframe for the csv found at pth
+    Note this is the point where the binary response variable 'Churn' is calculated
+    from 'Attrition_Flag' variable
 
     input:
             pth: a path to the csv
@@ -88,6 +90,9 @@ def import_data(pth):
             df: pandas dataframe
     '''
     df = pd.read_csv(pth)
+    df['Churn'] =\
+    df['Attrition_Flag']\
+        .apply(lambda val: 0 if val == "Existing Customer" else 1)
     return df
 
 
@@ -160,7 +165,7 @@ def perform_eda(df, pth="./images/eda/"):
     plt.close()
     
 
-def encoder_helper(df, category_lst, response):
+def encoder_helper(df, category_lst, response='Churn'):
     '''
     helper function to turn each categorical column into a new column with
     propotion of churn for each category - associated with cell 15 from the notebook
@@ -186,7 +191,7 @@ def encoder_helper(df, category_lst, response):
     return df
 
 
-def perform_feature_engineering(df, response):
+def perform_feature_engineering(df, response='Churn'):
     '''
     input:
               df: pandas dataframe
@@ -200,9 +205,14 @@ def perform_feature_engineering(df, response):
               y_test: y testing data
     '''
 
-    category_lst = ['Gender', 'Education_Level', 'Marital_Status',
-                    'Income_Category', 'Card_Category']
-    response = 'Churn'
+    
+    category_lst = [
+    'Gender',
+    'Education_Level',
+    'Marital_Status',
+    'Income_Category',
+    'Card_Category'                
+    ]
 
     post_encoding_df = encoder_helper(df, category_lst, response)
 
@@ -229,7 +239,8 @@ def classification_report_image(y_train,
                                 y_train_preds_lr,
                                 y_train_preds_rf,
                                 y_test_preds_lr,
-                                y_test_preds_rf):
+                                y_test_preds_rf,
+                                pth_results):
     '''
     produces classification report for training and testing results and stores report as image
     in images folder
@@ -244,7 +255,70 @@ def classification_report_image(y_train,
     output:
              None
     '''
-    pass
+
+    # Calculate classification reports for random forest
+    rf_test_report = classification_report(y_test, y_test_preds_rf, output_dict=True)
+    rf_train_report = classification_report(y_train, y_train_preds_rf, output_dict=True)
+    
+    # Convert the classification reports to DataFrames
+    rf_test_report_df = pd.DataFrame(rf_test_report).transpose()
+    rf_train_report_df = pd.DataFrame(rf_train_report).transpose()
+    
+    # Save the DataFrames to CSV files
+    rf_test_report_df.to_csv(pth_results + "random_forest_test_report.csv")
+    rf_train_report_df.to_csv(pth_results + "random_forest_train_report.csv")
+
+    
+    # Calculate classification reports for logistic regression
+    lr_test_report = classification_report(y_test, y_test_preds_lr, output_dict=True)
+    lr_train_report = classification_report(y_train, y_train_preds_lr, output_dict=True)
+    
+    # Convert the classification reports to DataFrames
+    lr_test_report_df = pd.DataFrame(lr_test_report).transpose()
+    lr_train_report_df = pd.DataFrame(lr_train_report).transpose()
+    
+    # Save the DataFrames to CSV files
+    lr_test_report_df.to_csv(pth_results + "logistic_model_test_report.csv")
+    lr_train_report_df.to_csv(pth_results + "logistic_model_train_report.csv")
+
+def shap_tree_explainer_plot(tree_model, X_data, output_pth):
+    '''
+    creates and stores the shap plot for tree-based models:
+    for example:
+        - Scikit-Learn: DecisionTreeClassifier, DecisionTreeRegressor
+        - XGBoost: XGBoostClassifier and XGBoostRegressor.
+        - LightGBM: LGBMClassifier and LGBMRegressor.
+        - CatBoost: CatBoostClassifier and CatBoostRegressor.
+
+    input:
+            tree_model: tree-based model
+            X_data: pandas dataframe of X values
+            output_pth: path to store the figure
+
+    output:
+             None
+
+    '''
+
+    model_name = tree_model.__class__.__name__
+    
+    # Calculate SHAP values
+    explainer = shap.TreeExplainer(tree_model)
+    shap_values = explainer.shap_values(X_data)
+    
+    # Create the summary plot
+    shap.summary_plot(shap_values, X_data, plot_type="bar", show=False)
+
+    # Adjust subplot spacing to prevent labels from being cut off
+    plt.tight_layout()
+    
+    # Save the plot to the specified file
+    plt.savefig(output_pth + f"{model_name}_shap_plot.png")
+    
+    # Close the plot to free up resources
+    plt.close()
+    
+    
 
 
 def feature_importance_plot(model, X_data, output_pth):
@@ -258,10 +332,42 @@ def feature_importance_plot(model, X_data, output_pth):
     output:
              None
     '''
-    pass
+    model_name = model.__class__.__name__
+    
+    # Calculate feature importances
+    importances = model.feature_importances_
+    # Sort feature importances in descending order
+    indices = np.argsort(importances)[::-1]
+
+    # Rearrange feature names so they match the sorted feature importances
+    names = [X_data.columns[i] for i in indices]
+
+    # Create plot
+    plt.figure(figsize=(20, 5))
+
+    # Create plot title
+    plt.title("Feature Importance")
+    plt.ylabel('Importance')
+
+    # Add bars
+    plt.bar(range(X_data.shape[1]), importances[indices])
+
+    # Add feature names as x-axis labels
+    plt.xticks(range(X_data.shape[1]), names, rotation=90)
+
+    # Adjust subplot spacing to prevent labels from being cut off
+    plt.tight_layout()
+
+    # Save the plot to the specified file
+    plt.savefig(output_pth + f"{model_name}_feature_importance_plot.png")
+
+    # Close the plot to free up resources
+    plt.close()
+    
+
 
 def train_models(X_train, X_test, y_train, y_test, 
-                 pth_results="./image/results/", 
+                 pth_results="./images/results/", 
                  pth_models="./models/"):
     '''
     train, store model results: images + scores, and store models
@@ -288,27 +394,9 @@ def train_models(X_train, X_test, y_train, y_test,
     y_train_preds_rf = cv_rfc.best_estimator_.predict(X_train)
     y_test_preds_rf = cv_rfc.best_estimator_.predict(X_test)
 
-    # Calculate classification reports for random forest
-    rf_test_report = classification_report(y_test, y_test_preds_rf, output_dict=True)
-    rf_train_report = classification_report(y_train, y_train_preds_rf, output_dict=True)
-    
-    # Convert the classification reports to DataFrames
-    rf_test_report_df = pd.DataFrame(rf_test_report).transpose()
-    rf_train_report_df = pd.DataFrame(rf_train_report).transpose()
-    
-    # Save the DataFrames to CSV files
-    rf_test_report_df.to_csv(pth_results + "random_forest_test_report.csv")
-    rf_train_report_df.to_csv(pth_results + "random_forest_train_report.csv")
     
     # Save the best random forest model
     joblib.dump(cv_rfc.best_estimator_, pth_models + "random_forest_model.pkl")
-
-    
-    
-
-    
-    
-
 
     
     # Logistic Regression Classifier
@@ -318,20 +406,9 @@ def train_models(X_train, X_test, y_train, y_test,
     y_train_preds_lr = lrc.predict(X_train)
     y_test_preds_lr = lrc.predict(X_test)
 
-    # Calculate classification reports for logistic regression
-    lr_test_report = classification_report(y_test, y_test_preds_lr, output_dict=True)
-    lr_train_report = classification_report(y_train, y_train_preds_lr, output_dict=True)
-    
-    # Convert the classification reports to DataFrames
-    lr_test_report_df = pd.DataFrame(lr_test_report).transpose()
-    lr_train_report_df = pd.DataFrame(lr_train_report).transpose()
-    
-    # Save the DataFrames to CSV files
-    lr_test_report_df.to_csv(pth_results + "logistic_model_test_report.csv")
-    lr_train_report_df.to_csv(pth_results + "logistic_model_train_report.csv")
-
     # Save the best logistic regression model
     joblib.dump(lrc, pth_models + "logistic_model.pkl")
+
 
 
     #Compare ROC between the two models
@@ -358,4 +435,33 @@ def train_models(X_train, X_test, y_train, y_test,
 if __name__ == "__main__":
     df = import_data("./data/bank_data.csv")
     perform_eda(df)
+
+    X_train, X_test, y_train, y_test = perform_feature_engineering(df)
+
+    train_models(X_train, X_test, y_train, y_test)
+
+    rfc_model = joblib.load('./models/random_forest_model.pkl')
+    lr_model = joblib.load('./models/logistic_model.pkl')
+
+    
+    output_pth = "./images/results/"
+    feature_importance_plot(rfc_model, X_test, output_pth)
+    shap_tree_explainer_plot(rfc_model, X_test, output_pth)
+
+    pth_results = "./images/results/" 
+    y_train_preds_lr = lr_model.predict(X_train)
+    y_test_preds_lr = lr_model.predict(X_test)
+
+    y_train_preds_rf = rfc_model.predict(X_train)
+    y_test_preds_rf = rfc_model.predict(X_test)
+
+    classification_report_image(y_train,
+                                    y_test,
+                                    y_train_preds_lr,
+                                    y_train_preds_rf,
+                                    y_test_preds_lr,
+                                    y_test_preds_rf,
+                                    pth_results)
+
+    
 
