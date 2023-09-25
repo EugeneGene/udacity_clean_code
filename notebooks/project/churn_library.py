@@ -60,22 +60,21 @@ cls.train_models(X_train, X_test, y_train, y_test)
 Please make sure to provide the necessary data and adjust the function parameters as needed.
 """
 import os
-os.environ['QT_QPA_PLATFORM']='offscreen'
-
 import shap
 import joblib
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns; sns.set()
-
-from sklearn.preprocessing import normalize
+import seaborn as sns
 from sklearn.model_selection import train_test_split
-
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import plot_roc_curve, classification_report
+
+
+sns.set()
+os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 
 
 def import_data(pth):
@@ -91,7 +90,7 @@ def import_data(pth):
     '''
     df = pd.read_csv(pth)
     df['Churn'] =\
-    df['Attrition_Flag']\
+        df['Attrition_Flag']\
         .apply(lambda val: 0 if val == "Existing Customer" else 1)
     return df
 
@@ -106,64 +105,40 @@ def perform_eda(df, pth="./images/eda/"):
     output:
             None
     '''
-    cat_columns = [
-    'Gender',
-    'Education_Level',
-    'Marital_Status',
-    'Income_Category',
-    'Card_Category'                
-    ]
+    df['Churn'] = df['Attrition_Flag'].apply(
+        lambda val: 0 if val == "Existing Customer" else 1)
 
-    quant_columns = [
-        'Customer_Age',
-        'Dependent_count', 
-        'Months_on_book',
-        'Total_Relationship_Count', 
-        'Months_Inactive_12_mon',
-        'Contacts_Count_12_mon', 
-        'Credit_Limit', 
-        'Total_Revolving_Bal',
-        'Avg_Open_To_Buy', 
-        'Total_Amt_Chng_Q4_Q1', 
-        'Total_Trans_Amt',
-        'Total_Trans_Ct', 
-        'Total_Ct_Chng_Q4_Q1', 
-        'Avg_Utilization_Ratio'
-    ]
-    df['Churn'] =\
-        df['Attrition_Flag'].apply(lambda val: 0 if val == "Existing Customer" else 1)
-
-    plt.figure(figsize=(20,10)) 
-    df['Churn'].hist();
-    image_path = pth + "churn_histogram.png" 
+    plt.figure(figsize=(20, 10))
+    df['Churn'].hist()
+    image_path = pth + "churn_histogram.png"
     plt.savefig(image_path)
     plt.close()
 
-    plt.figure(figsize=(20,10)) 
-    df['Customer_Age'].hist();
+    plt.figure(figsize=(20, 10))
+    df['Customer_Age'].hist()
     image_path = pth + "customer_age_histogram.png"
     plt.savefig(image_path)
     plt.close()
 
-    plt.figure(figsize=(20,10)) 
-    df.Marital_Status.value_counts('normalize').plot(kind='bar');
+    plt.figure(figsize=(20, 10))
+    df.Marital_Status.value_counts('normalize').plot(kind='bar')
     image_path = pth + "marital_status_value_counts_bar.png"
     plt.savefig(image_path)
     plt.close()
 
-    plt.figure(figsize=(20,10))
-    sns.histplot(df['Total_Trans_Ct'], stat='density', kde=True);
+    plt.figure(figsize=(20, 10))
+    sns.histplot(df['Total_Trans_Ct'], stat='density', kde=True)
     image_path = pth + "total_trans_ct_histplot.png"
     plt.savefig(image_path)
     plt.close()
 
-    plt.figure(figsize=(20,10)) 
-    sns.heatmap(df.corr(), annot=False, cmap='Dark2_r', linewidths = 2)
+    plt.figure(figsize=(20, 10))
+    sns.heatmap(df.corr(), annot=False, cmap='Dark2_r', linewidths=2)
     plt.show()
     image_path = pth + "feature_corr_heatmap.png"
     plt.savefig(image_path)
     plt.close()
-    
+
 
 def encoder_helper(df, category_lst, response='Churn'):
     '''
@@ -205,81 +180,110 @@ def perform_feature_engineering(df, response='Churn'):
               y_test: y testing data
     '''
 
-    
     category_lst = [
-    'Gender',
-    'Education_Level',
-    'Marital_Status',
-    'Income_Category',
-    'Card_Category'                
+        'Gender',
+        'Education_Level',
+        'Marital_Status',
+        'Income_Category',
+        'Card_Category'
     ]
 
     post_encoding_df = encoder_helper(df, category_lst, response)
 
-    keep_cols = ['Customer_Age', 'Dependent_count', 'Months_on_book',
-             'Total_Relationship_Count', 'Months_Inactive_12_mon',
-             'Contacts_Count_12_mon', 'Credit_Limit', 'Total_Revolving_Bal',
-             'Avg_Open_To_Buy', 'Total_Amt_Chng_Q4_Q1', 'Total_Trans_Amt',
-             'Total_Trans_Ct', 'Total_Ct_Chng_Q4_Q1', 'Avg_Utilization_Ratio',
-             'Gender_Churn', 'Education_Level_Churn', 'Marital_Status_Churn', 
-             'Income_Category_Churn', 'Card_Category_Churn']
+    keep_cols = [
+        'Customer_Age',
+        'Dependent_count',
+        'Months_on_book',
+        'Total_Relationship_Count',
+        'Months_Inactive_12_mon',
+        'Contacts_Count_12_mon',
+        'Credit_Limit',
+        'Total_Revolving_Bal',
+        'Avg_Open_To_Buy',
+        'Total_Amt_Chng_Q4_Q1',
+        'Total_Trans_Amt',
+        'Total_Trans_Ct',
+        'Total_Ct_Chng_Q4_Q1',
+        'Avg_Utilization_Ratio',
+        'Gender_Churn',
+        'Education_Level_Churn',
+        'Marital_Status_Churn',
+        'Income_Category_Churn',
+        'Card_Category_Churn']
 
     X = pd.DataFrame()
     X[keep_cols] = post_encoding_df[keep_cols]
     y = post_encoding_df['Churn']
-    
+
     X_train, X_test, y_train, y_test =\
-        train_test_split(X, y, test_size= 0.3, random_state=42)
+        train_test_split(X, y, test_size=0.3, random_state=42)
 
     return X_train, X_test, y_train, y_test
 
 
-def classification_report_image(y_train,
-                                y_test,
-                                y_train_preds_lr,
-                                y_train_preds_rf,
-                                y_test_preds_lr,
-                                y_test_preds_rf,
-                                pth_results):
+def classification_report_image(data, pth_results):
     '''
     produces classification report for training and testing results and stores report as image
     in images folder
     input:
-            y_train: training response values
-            y_test:  test response values
-            y_train_preds_lr: training predictions from logistic regression
-            y_train_preds_rf: training predictions from random forest
-            y_test_preds_lr: test predictions from logistic regression
-            y_test_preds_rf: test predictions from random forest
+        data: A dictionary containing the following keys:
+            - 'y_train': training response values
+            - 'y_test': test response values
+            - 'y_train_preds_lr': training predictions from logistic regression
+            - 'y_train_preds_rf': training predictions from random forest
+            - 'y_test_preds_lr': test predictions from logistic regression
+            - 'y_test_preds_rf': test predictions from random forest
+
+        pth_results: Path to the results folder.
 
     output:
-             None
+         None
     '''
 
     # Calculate classification reports for random forest
-    rf_test_report = classification_report(y_test, y_test_preds_rf, output_dict=True)
-    rf_train_report = classification_report(y_train, y_train_preds_rf, output_dict=True)
-    
+    rf_test_report = classification_report(data['y_test'],
+                                           data['y_test_preds_rf'],
+                                           output_dict=True)
+    rf_train_report = classification_report(data['y_train'],
+                                            data['y_train_preds_rf'],
+                                            output_dict=True)
+
     # Convert the classification reports to DataFrames
     rf_test_report_df = pd.DataFrame(rf_test_report).transpose()
     rf_train_report_df = pd.DataFrame(rf_train_report).transpose()
-    
-    # Save the DataFrames to CSV files
-    rf_test_report_df.to_csv(pth_results + "random_forest_test_report.csv")
-    rf_train_report_df.to_csv(pth_results + "random_forest_train_report.csv")
 
-    
+    # Save the DataFrames to CSV files
+    rf_test_report_df.to_csv(
+        os.path.join(
+            pth_results,
+            "random_forest_test_report.csv"))
+    rf_train_report_df.to_csv(
+        os.path.join(
+            pth_results,
+            "random_forest_train_report.csv"))
+
     # Calculate classification reports for logistic regression
-    lr_test_report = classification_report(y_test, y_test_preds_lr, output_dict=True)
-    lr_train_report = classification_report(y_train, y_train_preds_lr, output_dict=True)
-    
+    lr_test_report = classification_report(data['y_test'],
+                                           data['y_test_preds_lr'],
+                                           output_dict=True)
+    lr_train_report = classification_report(data['y_train'],
+                                            data['y_train_preds_lr'],
+                                            output_dict=True)
+
     # Convert the classification reports to DataFrames
     lr_test_report_df = pd.DataFrame(lr_test_report).transpose()
     lr_train_report_df = pd.DataFrame(lr_train_report).transpose()
-    
+
     # Save the DataFrames to CSV files
-    lr_test_report_df.to_csv(pth_results + "logistic_model_test_report.csv")
-    lr_train_report_df.to_csv(pth_results + "logistic_model_train_report.csv")
+    lr_test_report_df.to_csv(
+        os.path.join(
+            pth_results,
+            "logistic_model_test_report.csv"))
+    lr_train_report_df.to_csv(
+        os.path.join(
+            pth_results,
+            "logistic_model_train_report.csv"))
+
 
 def shap_tree_explainer_plot(tree_model, X_data, output_pth):
     '''
@@ -301,24 +305,22 @@ def shap_tree_explainer_plot(tree_model, X_data, output_pth):
     '''
 
     model_name = tree_model.__class__.__name__
-    
+
     # Calculate SHAP values
     explainer = shap.TreeExplainer(tree_model)
     shap_values = explainer.shap_values(X_data)
-    
+
     # Create the summary plot
     shap.summary_plot(shap_values, X_data, plot_type="bar", show=False)
 
     # Adjust subplot spacing to prevent labels from being cut off
     plt.tight_layout()
-    
+
     # Save the plot to the specified file
     plt.savefig(output_pth + f"{model_name}_shap_plot.png")
-    
+
     # Close the plot to free up resources
     plt.close()
-    
-    
 
 
 def feature_importance_plot(model, X_data, output_pth):
@@ -333,7 +335,7 @@ def feature_importance_plot(model, X_data, output_pth):
              None
     '''
     model_name = model.__class__.__name__
-    
+
     # Calculate feature importances
     importances = model.feature_importances_
     # Sort feature importances in descending order
@@ -363,11 +365,10 @@ def feature_importance_plot(model, X_data, output_pth):
 
     # Close the plot to free up resources
     plt.close()
-    
 
 
-def train_models(X_train, X_test, y_train, y_test, 
-                 pth_results="./images/results/", 
+def train_models(X_train, X_test, y_train, y_test,
+                 pth_results="./images/results/",
                  pth_models="./models/"):
     '''
     train, store model results: images + scores, and store models
@@ -382,7 +383,7 @@ def train_models(X_train, X_test, y_train, y_test,
 
     # Random Forest Classifier Model with GridSearch optimization
     rfc = RandomForestClassifier(random_state=42)
-    param_grid = { 
+    param_grid = {
         'n_estimators': [200, 500],
         'max_features': ['auto', 'sqrt'],
         'max_depth': [4, 5, 100],
@@ -390,47 +391,36 @@ def train_models(X_train, X_test, y_train, y_test,
     }
     cv_rfc = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=5)
     cv_rfc.fit(X_train, y_train)
- 
-    y_train_preds_rf = cv_rfc.best_estimator_.predict(X_train)
-    y_test_preds_rf = cv_rfc.best_estimator_.predict(X_test)
 
-    
     # Save the best random forest model
     joblib.dump(cv_rfc.best_estimator_, pth_models + "random_forest_model.pkl")
 
-    
     # Logistic Regression Classifier
     lrc = LogisticRegression(solver='lbfgs', max_iter=3000)
     lrc.fit(X_train, y_train)
 
-    y_train_preds_lr = lrc.predict(X_train)
-    y_test_preds_lr = lrc.predict(X_test)
-
     # Save the best logistic regression model
     joblib.dump(lrc, pth_models + "logistic_model.pkl")
 
-
-
-    #Compare ROC between the two models
+    # Compare ROC between the two models
     lrc_plot = plot_roc_curve(lrc, X_test, y_test)
     plt.figure(figsize=(15, 8))
     ax = plt.gca()
-    rfc_disp = plot_roc_curve(cv_rfc.best_estimator_, X_test, y_test, ax=ax, alpha=0.8)
+    plot_roc_curve(cv_rfc.best_estimator_, X_test, y_test, ax=ax, alpha=0.8)
     lrc_plot.plot(ax=ax, alpha=0.8)
-    image_path = pth_results + "random_forest_and_logistic_regress_test_ROC_plots.png" 
+    image_path = pth_results + "random_forest_and_logistic_regress_test_ROC_plots.png"
     plt.savefig(image_path)
     plt.close()
 
     lrc_plot = plot_roc_curve(lrc, X_train, y_train)
     plt.figure(figsize=(15, 8))
     ax = plt.gca()
-    rfc_disp = plot_roc_curve(cv_rfc.best_estimator_, X_train, y_train, ax=ax, alpha=0.8)
+    plot_roc_curve(cv_rfc.best_estimator_, X_train, y_train, ax=ax, alpha=0.8)
     lrc_plot.plot(ax=ax, alpha=0.8)
-    image_path = pth_results + "random_forest_and_logistic_regress_train_ROC_plots.png" 
+    image_path = pth_results + "random_forest_and_logistic_regress_train_ROC_plots.png"
     plt.savefig(image_path)
     plt.close()
 
-    
 
 if __name__ == "__main__":
     df = import_data("./data/bank_data.csv")
@@ -443,25 +433,24 @@ if __name__ == "__main__":
     rfc_model = joblib.load('./models/random_forest_model.pkl')
     lr_model = joblib.load('./models/logistic_model.pkl')
 
-    
     output_pth = "./images/results/"
     feature_importance_plot(rfc_model, X_test, output_pth)
     shap_tree_explainer_plot(rfc_model, X_test, output_pth)
 
-    pth_results = "./images/results/" 
+    pth_results = "./images/results/"
     y_train_preds_lr = lr_model.predict(X_train)
     y_test_preds_lr = lr_model.predict(X_test)
 
     y_train_preds_rf = rfc_model.predict(X_train)
     y_test_preds_rf = rfc_model.predict(X_test)
 
-    classification_report_image(y_train,
-                                    y_test,
-                                    y_train_preds_lr,
-                                    y_train_preds_rf,
-                                    y_test_preds_lr,
-                                    y_test_preds_rf,
-                                    pth_results)
+    data = {
+        'y_train': y_train,
+        'y_test': y_test,
+        'y_train_preds_lr': y_train_preds_lr,
+        'y_train_preds_rf': y_train_preds_rf,
+        'y_test_preds_lr': y_test_preds_lr,
+        'y_test_preds_rf': y_test_preds_rf
+    }
 
-    
-
+    classification_report_image(data, pth_results)

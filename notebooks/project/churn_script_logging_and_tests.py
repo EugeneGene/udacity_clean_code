@@ -133,6 +133,11 @@ class TestChurnScript(unittest.TestCase):
                 logging.info("SUCCESS: %s removed", file_path)
             shutil.rmtree(test_images_directory)
             logging.info("SUCCESS: %s removed", test_images_directory)
+            try:
+                shutil.rmtree("./images_test/")
+                logging.info("SUCCESS: ./images_test/ removed")
+            except Exception as err:
+                logging.error("Error removing the ./images_test/ directory: %s", str(err))
 
     def test_encoder_helper(self):
         '''
@@ -262,8 +267,17 @@ class TestChurnScript(unittest.TestCase):
                         file_path = os.path.join(directory, file)
                         os.remove(file_path)
                         logging.info("SUCCESS: %s removed", file_path)
-                os.rmdir(directory)
-                logging.info("SUCCESS: %s removed", directory)
+                try:
+                    shutil.rmtree(directory)
+                    logging.info("SUCCESS: %s removed", directory)
+                except Exception as err:
+                    logging.error("Error removing directory: %s", str(err))
+
+            try:
+                shutil.rmtree("./images_test/")
+                logging.info("SUCCESS: ./images_test/ removed")
+            except Exception as err:
+                logging.error("Error removing the ./images_test/ directory: %s", str(err))
 
 if __name__ == "__main__":
     unittest.main()
