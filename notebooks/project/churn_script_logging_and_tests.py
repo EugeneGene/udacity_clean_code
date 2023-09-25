@@ -1,39 +1,62 @@
 """
-This test script is designed to test various functions from the 'churn_library'
- module, which provides functionality for churn prediction tasks.
- It includes test cases for data import, exploratory data analysis (EDA),
- feature encoding, feature engineering, model training, and evaluation.
-
-Dependencies:
-- os
-- logging
-- churn_library
+This test script validates functions from the 'churn_library' module,
+used for churn prediction tasks.
 
 Test Functions:
-- `test_import(import_data)`:
-    Tests the data import functionality by loading a sample CSV file. It checks
-    if the DataFrame has non-zero dimensions after import.
-- `test_eda(perform_eda)`:
-    Placeholder for testing the 'perform_eda' function for exploratory data
-    analysis.
-- `test_encoder_helper(encoder_helper)`:
-    Placeholder for testing the 'encoder_helper' function for encoding
-    categorical features.
-- `test_perform_feature_engineering(perform_feature_engineering)`:
-    Placeholder for testing the 'perform_feature_engineering' function for
-    feature engineering.
-- `test_train_models(train_models)`: Placeholder for testing the 'train_models'
-    function for model training and evaluation.
+- `test_import(import_data)`
+- `test_eda(perform_eda)`
+- `test_encoder_helper(encoder_helper)`
+- `test_perform_feature_engineering(perform_feature_engineering)`
+- `test_train_models(train_models)`
+
+Usage:
+Run this script to validate the 'churn_library' functions.
 """
-import os, shutil
+import os
+import shutil
 import logging
 import unittest
 import pandas as pd
 import churn_library as cls
 
-
-
 class TestChurnScript(unittest.TestCase):
+    '''
+    This test class is designed to test various functions from the 'churn_library'
+    module, which provides functionality for churn prediction tasks.
+    It includes test cases for data import, exploratory data analysis (EDA),
+    feature encoding, feature engineering, model training, and evaluation.
+
+    Dependencies:
+    - os
+    - shutil
+    - logging
+    - unittest
+    - pandas
+    - churn_library
+
+    Test Functions:
+    - `test_import(import_data)`:
+        Tests the data import functionality by loading a sample CSV file.
+        It checks if the DataFrame has non-zero dimensions after import.
+    - `test_eda(perform_eda)`:
+        Tests the 'perform_eda' function for exploratory data
+        analysis. It checks if all of the EDA .png files were created
+    - `test_encoder_helper(encoder_helper)`:
+        Tests the 'encoder_helper' function for encoding
+        categorical features. It checks if the post-encoded Dataframe
+        contains specific columns.
+    - `test_perform_feature_engineering(perform_feature_engineering)`:
+        Tests the 'perform_feature_engineering' function for
+        feature engineering. After laoding a test .csv file,
+        it checks if the lengths of the X_train, X_test,
+        y_train, y_test DataFrames are non-zero.
+    - `test_train_models(train_models)`: Tests the 'train_models'
+        function for model training and evaluation.
+        After loading a test .csv file and performing feature engineering,
+        it checks for the existence of model files (.pkl) and
+        model result files (.csv and .png)
+    '''
+
     logging.basicConfig(
         filename='./logs/churn_library.log',
         level = logging.INFO,
@@ -96,8 +119,8 @@ class TestChurnScript(unittest.TestCase):
 
             # Check if the images were generated in the test directory
             assert len(files) > 0
-            logging.info(f"SUCCESS: {len(files)} EDA File Created.")
- 
+            logging.info("SUCCESS: %d EDA File Created.", len(files))
+
         except AssertionError:
             logging.error("ERROR: EDA file(s) weren't created")
 
@@ -107,9 +130,9 @@ class TestChurnScript(unittest.TestCase):
             for file in os.listdir(test_images_directory):
                 file_path = os.path.join(test_images_directory, file)
                 os.remove(file_path)
-                logging.info(f"SUCCESS: {file_path} removed")
+                logging.info("SUCCESS: %s removed", file_path)
             shutil.rmtree(test_images_directory)
-            logging.info(f"SUCCESS: {test_images_directory} removed")
+            logging.info("SUCCESS: %s removed", test_images_directory)
 
     def test_encoder_helper(self):
         '''
@@ -135,10 +158,10 @@ class TestChurnScript(unittest.TestCase):
             # Test for the existence of the name in the 'Name' column
             try:
                 assert new_col_to_check in post_encoding_df.columns
-                logging.info(f"SUCCESS: {new_col_to_check} encoding completed.")
+                logging.info("SUCCESS: %s encoding completed.", new_col_to_check)
 
-            except AssertionError as e:
-                logging.error(f"Error: {e}")
+            except AssertionError as err:
+                logging.error("Error: %s", err)
 
     def test_perform_feature_engineering(self):
         '''
@@ -158,31 +181,31 @@ class TestChurnScript(unittest.TestCase):
         # Test for existence of training and testing set
         try:
             assert len(X_train) > 0
-            logging.info(f"SUCCESS: X_train has a lenght of {len(X_train)}.")
+            logging.info("SUCCESS: X_train has a length of %d.", len(X_train))
 
         except AssertionError as err:
-            logging.error(f"Error: {err}")
+            logging.error("Error: %s", err)
 
         try:
             assert len(X_test) > 0
-            logging.info(f"SUCCESS: X_test has a lenght of {len(X_test)}.")
+            logging.info("SUCCESS: X_test has a length of %d.", len(X_test))
 
         except AssertionError as err:
-            logging.error(f"Error: {err}")
+            logging.error("Error: %s", err)
 
         try:
             assert len(y_train) > 0
-            logging.info(f"SUCCESS: y_train has a lenght of {len(y_train)}.")
+            logging.info("SUCCESS: y_train has a length of %d.", len(y_train))
 
         except AssertionError as err:
-            logging.error(f"Error: {err}")
+            logging.error("Error: %s", err)
 
         try:
             assert len(y_test) > 0
-            logging.info(f"SUCCESS: y_train has a lenght of {len(y_test)}.")
+            logging.info("SUCCESS: y_test has a length of %d.", len(y_test))
 
         except AssertionError as err:
-            logging.error(f"Error: {err}")
+            logging.error("Error: %s", err)
 
     def test_train_models(self):
         '''
@@ -196,36 +219,33 @@ class TestChurnScript(unittest.TestCase):
         category_lst = ['Gender', 'Education_Level', 'Marital_Status',
                         'Income_Category', 'Card_Category']
         response = 'Churn'
-        
+
         post_encoding_test_data_df = cls.encoder_helper(test_data_df, category_lst, response)
-    
+
         X_train, X_test, y_train, y_test =\
             cls.perform_feature_engineering(post_encoding_test_data_df, response)
 
         # Test
-    
+
         # Specify a test directory for images (you may need to adjust this path)
         test_results_directory = "./images_test/results/"
         test_models_directory = "./models_test/"
-    
+
         # Create the directories if they don't exist
         for directory in [test_results_directory, test_models_directory]:
             if not os.path.exists(directory):
                 os.makedirs(directory)
 
-        cls.train_models(X_train, X_test, y_train, y_test, 
-                     test_results_directory, 
+        cls.train_models(X_train, X_test, y_train, y_test,
+                     test_results_directory,
                      test_models_directory)
 
         try:
             # Get a list of all files and directories in the specified directory
-            files_and_directories = os.listdir(test_models_directory)
             # Use a list comprehension to filter only files (not directories)
-            files = [file for file in files_and_directories if 
-                     os.path.isfile(os.path.join(test_models_directory, file))]
-            # files = [file for file in os.listdir(test_results_directory) 
-            #          if file.endswith(".csv")]
-    
+            files = [file for file in os.listdir(test_models_directory)
+                     if file.endswith(".pkl")]
+
             # Check if the images were generated in the test directory
             assert len(files) > 0
             logging.info("SUCCESS: %d model files (pkl) Created.", len(files))
@@ -234,21 +254,16 @@ class TestChurnScript(unittest.TestCase):
             logging.error("Error: No model files were created")
 
 
-        # finally:
-        #     # Clean up: remove generated test results and models
-        #     for dir in [test_results_directory, test_models_directory]:
-        #         for file in os.listdir(dir):
-        #             file_path = os.path.join(dir, file)
-        #             os.remove(file_path)
-        #             logging.info(f"SUCCESS: {file_path} removed")
-        #         os.rmdir(dir)
-        #         logging.info(f"SUCCESS: {dir} removed")
+        finally:
+            # Clean up: remove generated test results and models
+            for directory in [test_results_directory, test_models_directory]:
+                for file in os.listdir(directory):
+                    if file.endswith(tuple(['.png', '.csv', '.pkl'])):
+                        file_path = os.path.join(directory, file)
+                        os.remove(file_path)
+                        logging.info("SUCCESS: %s removed", file_path)
+                os.rmdir(directory)
+                logging.info("SUCCESS: %s removed", directory)
 
 if __name__ == "__main__":
     unittest.main()
-
-    # TestChurnScript.test_import(cls.import_data)
-    # test_eda(cls.perform_eda)
-    # test_encoder_helper(cls.encoder_helper)
-    # test_perform_feature_engineering(cls.perform_feature_engineering)
-    # test_train_models(cls.train_models)
